@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¿Podés confiar en una foto? — Captrue</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+:root {
+  --ink: #0e0d0c;
+  --paper: #f5f0e8;
+  --cream: #ede7d9;
+  --red: #c8321a;
+  --red-dim: rgba(200,50,26,0.12);
+  --grey: #6b6560;
+  --grey-light: rgba(107,101,96,0.15);
+  --border: rgba(14,13,12,0.12);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Instrument Serif', Georgia, serif;
+  overflow-x: hidden;
+}
+
+/* ── NOISE TEXTURE OVERLAY ── */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:1000;
+  opacity:0.6;
+}
+
+/* ── HEADER ── */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 18px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--grey);
+}
+.header-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--red);
+  border: 1px solid rgba(200,50,26,0.3);
+  padding: 4px 12px;
+}
+
+/* ── HERO ── */
+.hero {
+  min-height: 88vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-left {
+  padding: 80px 64px 80px 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+
+.hero-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 32px;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.2s ease forwards;
+}
+
+.hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(64px, 7vw, 104px);
+  line-height: 0.93;
+  letter-spacing: -1px;
+  color: var(--ink);
+  margin-bottom: 40px;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.4s ease forwards;
+}
+
+.hero-title .accent {
+  color: var(--red);
+  font-style: normal;
+}
+
+.hero-body {
+  font-size: 19px;
+  line-height: 1.65;
+  color: var(--grey);
+  max-width: 420px;
+  margin-bottom: 48px;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.6s ease forwards;
+}
+
+.hero-body strong {
+  color: var(--ink);
+  font-style: italic;
+}
+
+.cta-group {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.8s ease forwards;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 14px 32px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-primary:hover { background: var(--red); transform: translateY(-1px); }
+
+.cta-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--grey);
+  letter-spacing: 1px;
+}
+
+/* ── HERO RIGHT — VISUAL ── */
+.hero-right {
+  padding: 80px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cream);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-right::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 39px,
+    rgba(14,13,12,0.04) 39px,
+    rgba(14,13,12,0.04) 40px
+  ),
+  repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 39px,
+    rgba(14,13,12,0.04) 39px,
+    rgba(14,13,12,0.04) 40px
+  );
+}
+
+.photo-mock {
+  position: relative;
+  z-index: 2;
+  opacity: 0;
+  animation: fadeIn 1.2s 1s ease forwards;
+}
+
+.photo-frame {
+  width: 280px;
+  height: 340px;
+  background: var(--ink);
+  position: relative;
+  box-shadow: 8px 8px 0 var(--red), 16px 16px 0 rgba(14,13,12,0.1);
+}
+
+.photo-frame-inner {
+  position: absolute;
+  inset: 12px;
+  background: linear-gradient(135deg, #2a2520 0%, #1a1510 50%, #0e0d0c 100%);
+  overflow: hidden;
+}
+
+/* Simulated photo scene */
+.photo-scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 16px;
+}
+
+.photo-scene::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 30% 30%, rgba(255,220,150,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 70% 60%, rgba(100,150,200,0.1) 0%, transparent 50%);
+}
+
+/* Abstract shapes simulating a photo */
+.photo-shapes {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.shape {
+  position: absolute;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.shape-1 { width:120px; height:180px; top:20px; left:30px; transform:rotate(-3deg); }
+.shape-2 { width:80px; height:60px; top:60px; right:20px; transform:rotate(5deg); }
+.shape-3 { width:200px; height:4px; top:50%; left:0; background: rgba(255,255,255,0.06); border:none; }
+.shape-4 { width:60px; height:90px; bottom:40px; left:20px; transform:rotate(2deg); }
+.shape-5 { width:100px; height:70px; bottom:20px; right:30px; transform:rotate(-4deg); }
+
+.photo-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.85));
+  padding: 16px 12px 12px;
+}
+
+.photo-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.meta-line {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.5);
+}
+
+.meta-line.verified {
+  color: #4dff9f;
+  font-size: 9px;
+}
+
+.photo-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(77,255,159,0.15);
+  border: 1px solid rgba(77,255,159,0.4);
+  padding: 3px 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  color: #4dff9f;
+  letter-spacing: 1.5px;
+}
+
+.photo-caption {
+  margin-top: 20px;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--grey);
+  letter-spacing: 1px;
+}
+
+/* ── DIVIDER ── */
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+/* ── PROBLEM SECTION ── */
+.problem {
+  padding: 100px 64px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.problem-left h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(48px, 5vw, 72px);
+  line-height: 0.95;
+  margin-bottom: 32px;
+}
+
+.problem-left h2 em {
+  color: var(--red);
+  font-style: normal;
+}
+
+.problem-left p {
+  font-size: 17px;
+  line-height: 1.75;
+  color: var(--grey);
+  margin-bottom: 16px;
+}
+
+.problem-left p strong {
+  color: var(--ink);
+}
+
+.problem-right {
+  padding-top: 12px;
+}
+
+.stat-block {
+  border-top: 1px solid var(--border);
+  padding: 28px 0;
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+.stat-block:last-child { border-bottom: 1px solid var(--border); }
+
+.stat-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 52px;
+  line-height: 1;
+  color: var(--red);
+  flex-shrink: 0;
+  min-width: 100px;
+}
+
+.stat-label {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--grey);
+  padding-top: 8px;
+}
+
+.stat-label strong {
+  display: block;
+  color: var(--ink);
+  font-style: italic;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+/* ── SCENARIO SECTION ── */
+.scenario {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 100px 64px;
+  position: relative;
+  overflow: hidden;
+}
+
+.scenario::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,50,26,0.08) 0%, transparent 70%);
+}
+
+.scenario-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 48px;
+}
+
+.scenario-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px;
+  background: rgba(255,255,255,0.08);
+  margin-top: 48px;
+}
+
+.scenario-card {
+  background: var(--ink);
+  padding: 36px 32px;
+  position: relative;
+}
+
+.scenario-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 80px;
+  color: rgba(255,255,255,0.04);
+  line-height: 1;
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  pointer-events: none;
+}
+
+.scenario-who {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 12px;
+}
+
+.scenario-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 20px;
+  font-style: italic;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  color: rgba(245,240,232,0.9);
+}
+
+.scenario-body {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  line-height: 1.8;
+  color: rgba(245,240,232,0.4);
+}
+
+.scenario-headline {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 6vw, 88px);
+  line-height: 0.93;
+  color: var(--paper);
+  max-width: 700px;
+}
+
+.scenario-headline em {
+  color: var(--red);
+  font-style: normal;
+}
+
+/* ── SOLUTION SECTION ── */
+.solution {
+  padding: 100px 64px;
+}
+
+.solution-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  margin-bottom: 64px;
+}
+
+.solution-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--grey);
+  margin-bottom: 20px;
+}
+
+.solution-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 5.5vw, 80px);
+  line-height: 0.93;
+}
+
+.solution-title em { color: var(--red); font-style: normal; }
+
+.solution-body {
+  font-size: 17px;
+  line-height: 1.75;
+  color: var(--grey);
+  padding-top: 8px;
+}
+
+.solution-body strong { color: var(--ink); }
+
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.pillar {
+  background: var(--paper);
+  padding: 32px 28px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.2s;
+}
+
+.pillar:hover { background: var(--cream); }
+
+.pillar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.pillar:hover::before { transform: scaleX(1); }
+
+.pillar-icon {
+  font-size: 28px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.pillar-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.pillar-desc {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--grey);
+}
+
+/* ── QUESTION SECTION ── */
+.question-section {
+  background: var(--cream);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 100px 64px;
+  text-align: center;
+}
+
+.question-section h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(48px, 6vw, 88px);
+  line-height: 0.93;
+  margin-bottom: 24px;
+}
+
+.question-section h2 em { color: var(--red); font-style: normal; }
+
+.question-section p {
+  font-size: 19px;
+  line-height: 1.7;
+  color: var(--grey);
+  max-width: 600px;
+  margin: 0 auto 48px;
+}
+
+.question-options {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 48px;
+}
+
+.q-option {
+  border: 1px solid var(--border);
+  padding: 14px 24px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--grey);
+  background: var(--paper);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.q-option:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+  transform: translateY(-2px);
+}
+.q-option.active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.feedback-form {
+  max-width: 520px;
+  margin: 0 auto;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeUp 0.4s ease forwards;
+}
+
+.feedback-form.visible { display: flex; }
+
+.feedback-form textarea {
+  width: 100%;
+  padding: 16px 20px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  font-family: 'Instrument Serif', serif;
+  font-size: 16px;
+  color: var(--ink);
+  resize: none;
+  height: 100px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.feedback-form textarea:focus { border-color: var(--ink); }
+.feedback-form textarea::placeholder { color: var(--grey); font-style: italic; }
+
+.feedback-submit {
+  align-self: flex-start;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 14px 32px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.feedback-submit:hover { background: var(--red); }
+
+.thank-you {
+  display: none;
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px;
+  font-style: italic;
+  color: var(--ink);
+  padding: 24px;
+}
+
+/* ── FOOTER ── */
+footer {
+  padding: 40px 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border);
+}
+
+.footer-left {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--grey);
+  letter-spacing: 1px;
+}
+
+.footer-right {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--grey);
+}
+
+.footer-right a {
+  color: var(--red);
+  text-decoration: none;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-right { display: none; }
+  .hero-left { padding: 60px 32px; border-right: none; }
+  .problem { grid-template-columns: 1fr; gap: 48px; padding: 64px 32px; }
+  .scenario { padding: 64px 32px; }
+  .scenario-grid { grid-template-columns: 1fr; }
+  .solution { padding: 64px 32px; }
+  .solution-header { grid-template-columns: 1fr; gap: 32px; }
+  .pillars { grid-template-columns: 1fr 1fr; }
+  .question-section { padding: 64px 32px; }
+  header { padding: 16px 24px; }
+  footer { padding: 32px 24px; flex-direction: column; gap: 16px; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-label">Captrue — Proyecto en desarrollo · 2026</div>
+  <div class="header-tag">Buscando feedback</div>
+</header>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">Una pregunta que nadie está respondiendo</div>
+    <h1 class="hero-title">¿Esta foto<br>es <span class="accent">real?</span></h1>
+    <p class="hero-body">
+      Todos los días consumimos imágenes que pueden estar alteradas, generadas por IA,
+      o sacadas de contexto. <strong>No existe forma sencilla de verificarlo.</strong>
+      Estoy construyendo una solución. Quiero tu opinión.
+    </p>
+    <div class="cta-group">
+      <a href="#feedback" class="btn-primary">Opinar ahora</a>
+      <span class="cta-sub">5 minutos · sin registro</span>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="photo-mock">
+      <div class="photo-frame">
+        <div class="photo-frame-inner">
+          <div class="photo-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
+            <div class="shape shape-5"></div>
+          </div>
+          <div class="photo-badge">✓ VERIFICADO</div>
+          <div class="photo-overlay">
+            <div class="photo-meta">
+              <div class="meta-line verified">✦ Autenticidad certificada</div>
+              <div class="meta-line">SHA-256 · GPS · 2026-03-01 09:14:22</div>
+              <div class="meta-line">Fotógrafo verificado · Registro inmutable</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="photo-caption">Así se vería un certificado de autenticidad</div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ══ PROBLEMA ══ -->
+<section class="problem">
+  <div class="problem-left reveal">
+    <h2>El problema<br>es <em>enorme</em><br>y crece.</h2>
+    <p>
+      La inteligencia artificial puede generar una foto hiperrealista de cualquier evento,
+      en cualquier lugar, con cualquier persona, en segundos.
+    </p>
+    <p>
+      Y cuando una foto falsa se viraliza, <strong>el desmentido nunca llega tan lejos.</strong>
+      El daño ya está hecho.
+    </p>
+    <p>
+      El fotoperiodismo siempre fue el registro más honesto de la realidad.
+      Hoy, esa credibilidad está en peligro.
+    </p>
+  </div>
+  <div class="problem-right reveal">
+    <div class="stat-block">
+      <div class="stat-num">86%</div>
+      <div class="stat-label">
+        <strong>de las personas no puede distinguir</strong>
+        una foto generada por IA de una real, según estudios de percepción visual recientes.
+      </div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-num">6×</div>
+      <div class="stat-label">
+        <strong>más rápido se viraliza</strong>
+        una noticia falsa que una verdadera en redes sociales.
+      </div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-num">0</div>
+      <div class="stat-label">
+        <strong>estándares universales</strong>
+        de verificación fotográfica accesibles para un periodista independiente hoy.
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ══ ESCENARIOS ══ -->
+<section class="scenario">
+  <div class="scenario-eyebrow">¿A quién le importa esto?</div>
+  <h2 class="scenario-headline reveal">Más personas<br>de las que <em>creés.</em></h2>
+
+  <div class="scenario-grid reveal">
+    <div class="scenario-card">
+      <div class="scenario-num">01</div>
+      <div class="scenario-who">El periodista</div>
+      <div class="scenario-title">"Cubrí una protesta. ¿Cómo pruebo que esta foto la saqué yo, ahí, en ese momento?"</div>
+      <div class="scenario-body">Necesita demostrar autoría y contexto. Un editor, un juez, o una red social puede cuestionarlo. Hoy no tiene forma de probarlo de manera técnicamente irrefutable.</div>
+    </div>
+    <div class="scenario-card">
+      <div class="scenario-num">02</div>
+      <div class="scenario-who">El medio de comunicación</div>
+      <div class="scenario-title">"Recibo 300 fotos por día de colaboradores. ¿Cómo sé que ninguna fue alterada?"</div>
+      <div class="scenario-body">Una sola foto falsa publicada puede arruinar años de credibilidad. El proceso de verificación actual es manual, lento y no escala.</div>
+    </div>
+    <div class="scenario-card">
+      <div class="scenario-num">03</div>
+      <div class="scenario-who">El ciudadano</div>
+      <div class="scenario-title">"Vi una foto que parece mostrar algo grave. No sé si creerla o no."</div>
+      <div class="scenario-body">Sin herramientas accesibles de verificación, la única opción es la intuición. Y la intuición humana falla frente a la IA generativa moderna.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ══ SOLUCIÓN (sin revelar IP) ══ -->
+<section class="solution">
+  <div class="solution-header">
+    <div class="reveal">
+      <div class="solution-eyebrow">Lo que estoy construyendo</div>
+      <h2 class="solution-title">Prueba<br><em>irrefutable.</em><br>Desde el<br>primer click.</h2>
+    </div>
+    <div class="reveal" style="padding-top: 12px;">
+      <p class="solution-body">
+        Estoy desarrollando una app móvil que actúa en el momento exacto en que se toma la foto.
+        Antes de que nadie la pueda tocar. <strong>La autenticidad queda registrada de forma
+        técnicamente inmutable.</strong>
+      </p>
+      <br>
+      <p class="solution-body">
+        No es un filtro posterior. No es una marca de agua que se puede eliminar.
+        Es un registro criptográfico del origen, vinculado a la identidad verificada de quien la tomó.
+      </p>
+    </div>
+  </div>
+
+  <div class="pillars reveal">
+    <div class="pillar">
+      <span class="pillar-icon">🔐</span>
+      <div class="pillar-name">Registro en el origen</div>
+      <div class="pillar-desc">La foto queda sellada criptográficamente en el instante de captura. Si se modifica un solo píxel, el sello invalida.</div>
+    </div>
+    <div class="pillar">
+      <span class="pillar-icon">📍</span>
+      <div class="pillar-name">Lugar y tiempo verificado</div>
+      <div class="pillar-desc">GPS y timestamp de fuentes externas independientes. No del teléfono, que puede ser manipulado.</div>
+    </div>
+    <div class="pillar">
+      <span class="pillar-icon">🤖</span>
+      <div class="pillar-name">Detección de IA</div>
+      <div class="pillar-desc">Análisis automático para detectar si la imagen fue generada o alterada con inteligencia artificial.</div>
+    </div>
+    <div class="pillar">
+      <span class="pillar-icon">👤</span>
+      <div class="pillar-name">Identidad real</div>
+      <div class="pillar-desc">Los fotógrafos verifican su identidad real. Cada foto tiene un autor trazable y responsable.</div>
+    </div>
+  </div>
+
+  <div class="reveal" style="margin-top: 24px; padding: 32px; background: var(--cream); border: 1px solid var(--border);">
+    <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--grey); text-transform:uppercase; margin-bottom:12px;">El modelo</div>
+    <p style="font-size:17px; line-height:1.75; color:var(--grey);">
+      <strong style="color:var(--ink);">Gratis de usar, siempre.</strong>
+      Cualquier fotógrafo puede sacar fotos ilimitadas desde la app sin pagar nada.
+      Cada foto queda registrada y disponible para descargar con marca de agua.
+      La certificación criptográfica — la prueba irrefutable — es opcional y tiene costo.
+      <strong style="color:var(--ink);">Usás gratis. Pagás solo cuando necesitás certificar.</strong>
+    </p>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ══ FEEDBACK ══ -->
+<section class="question-section" id="feedback">
+  <div class="reveal">
+    <h2>¿Vos usarías<br>algo así <em>hoy?</em></h2>
+    <p>No necesito que seas periodista. Quiero entender si esta solución tiene sentido para gente real. Tu opinión me ayuda a construirlo mejor.</p>
+
+    <div class="question-options">
+      <div class="q-option" onclick="selectOption(this, 'periodista')">Soy periodista / fotógrafo</div>
+      <div class="q-option" onclick="selectOption(this, 'medio')">Trabajo en un medio</div>
+      <div class="q-option" onclick="selectOption(this, 'emprendedor')">Me interesa como emprendimiento</div>
+      <div class="q-option" onclick="selectOption(this, 'ciudadano')">Solo me preocupa la desinformación</div>
+    </div>
+
+    <div class="feedback-form" id="feedbackForm">
+      <textarea placeholder="¿Qué pensás? ¿Lo usarías? ¿Qué le falta? ¿Qué te genera dudas?" id="feedbackText"></textarea>
+      <button class="feedback-submit" onclick="submitFeedback()">Mandar feedback →</button>
+    </div>
+
+    <div class="thank-you" id="thankYou">
+      Gracias. Cada opinión cuenta más de lo que creés.
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="footer-left">Captrue — Proyecto en desarrollo · Buenos Aires, Argentina · 2026</div>
+  <div class="footer-right">¿Querés estar al tanto? <a href="/cdn-cgi/l/email-protection#30585f5c5170555a555d405c5f1e535f5d"><span class="__cf_email__" data-cfemail="127a7d7e73527778777f627e7d3c717d7f">[email&#160;protected]</span></a></div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// Reveal on scroll
+const revealEls = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => entry.target.classList.add('visible'), i * 80);
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+revealEls.forEach(el => observer.observe(el));
+
+// Feedback interaction
+let selectedRole = null;
+
+function selectOption(el, role) {
+  document.querySelectorAll('.q-option').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  selectedRole = role;
+  const form = document.getElementById('feedbackForm');
+  form.classList.add('visible');
+  
+  const placeholders = {
+    periodista: '¿Lo usarías en tu trabajo diario? ¿Qué te haría confiar en este sistema?',
+    medio: '¿Tu redacción necesita algo así? ¿Qué sería indispensable?',
+    emprendedor: '¿Ves el mercado? ¿Qué riesgos o barreras ves?',
+    ciudadano: '¿Cambiaría cómo consumís noticias saber que una foto está certificada?'
+  };
+  document.getElementById('feedbackText').placeholder = placeholders[role];
+}
+
+function submitFeedback() {
+  const text = document.getElementById('feedbackText').value.trim();
+  if (!text) return;
+  
+  // In a real implementation, this would send to a backend
+  document.getElementById('feedbackForm').style.display = 'none';
+  document.querySelectorAll('.q-option').forEach(o => o.style.display = 'none');
+  document.querySelector('.question-section p').style.display = 'no
