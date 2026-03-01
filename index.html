@@ -494,6 +494,18 @@ header {
 }
 .feedback-form.visible { display: flex; }
 
+.feedback-form input[type="email"] {
+  width: 100%;
+  padding: 16px 20px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.feedback-form input[type="email"]:focus { border-color: var(--ink); }
+
 .feedback-form textarea {
   width: 100%;
   padding: 16px 20px;
@@ -590,7 +602,6 @@ footer {
   <div class="header-tag">Buscando feedback</div>
 </header>
 
-<!-- HERO -->
 <section class="hero">
   <div class="hero-left">
     <div class="hero-eyebrow">Una pregunta que nadie está respondiendo</div>
@@ -634,7 +645,6 @@ footer {
 
 <hr class="section-divider">
 
-<!-- PROBLEMA -->
 <section class="problem">
   <div class="problem-left reveal">
     <h2>El problema<br>es <em>enorme</em><br>y crece.</h2>
@@ -678,7 +688,6 @@ footer {
 
 <hr class="section-divider">
 
-<!-- ESCENARIOS -->
 <section class="scenario">
   <div class="scenario-eyebrow">¿A quién le importa esto?</div>
   <h2 class="scenario-headline reveal">Más personas<br>de las que <em>creés.</em></h2>
@@ -707,7 +716,6 @@ footer {
 
 <hr class="section-divider">
 
-<!-- SOLUCIÓN -->
 <section class="solution">
   <div class="solution-header">
     <div class="reveal">
@@ -753,19 +761,17 @@ footer {
   <div class="modelo-box reveal">
     <div class="modelo-label">El modelo</div>
     <p class="modelo-text">
-      <strong>Gratis de usar, siempre.</strong>
-      <strong>Capturá sin límites, certificá por necesidad.</strong>
-        La app es gratis para sacar fotos 100% auténticas. Guardamos hasta 10 capturas en tu historial sin costo.
-        Para liberar espacio, podés descargar la foto con marca de agua (solo como referencia) o eliminarla.
-        La certificación criptográfica —la prueba irrefutable, eterna y sin marcas— es opcional.
-        <strong>Usás gratis. Pagás solo cuando necesitás la prueba real.</strong>
+      <strong>Capturá sin límites, certificá por necesidad.</strong><br>
+      La app es gratis para sacar fotos 100% auténticas. Guardamos hasta 10 capturas en tu historial sin costo.
+      Para liberar espacio, podés descargar la foto con marca de agua (solo como referencia) o eliminarla.
+      La certificación criptográfica —la prueba irrefutable, eterna y sin marcas— es opcional.<br>
+      <strong>Usás gratis. Pagás solo cuando necesitás la prueba real.</strong>
     </p>
   </div>
 </section>
 
 <hr class="section-divider">
 
-<!-- FEEDBACK -->
 <section class="question-section" id="feedback">
   <div class="reveal">
     <h2>¿Vos usarías<br>algo así <em>hoy?</em></h2>
@@ -778,10 +784,12 @@ footer {
       <div class="q-option" onclick="selectOption(this, 'ciudadano')">Solo me preocupa la desinformación</div>
     </div>
 
-    <div class="feedback-form" id="feedbackForm">
-      <textarea id="feedbackText" placeholder="¿Qué pensás? ¿Lo usarías? ¿Qué le falta? ¿Qué te genera dudas?"></textarea>
-      <button class="feedback-submit" onclick="submitFeedback()">Mandar feedback →</button>
-    </div>
+    <form class="feedback-form" id="feedbackForm" action="https://formspree.io/f/mykdadkl" method="POST">
+      <input type="email" name="email" id="userEmail" placeholder="Tu email para responderte" required>
+      <input type="hidden" name="role" id="hiddenRole">
+      <textarea name="message" id="feedbackText" placeholder="¿Qué pensás? ¿Lo usarías? ¿Qué le falta? ¿Qué te genera dudas?"></textarea>
+      <button type="submit" class="feedback-submit">Mandar feedback →</button>
+    </form>
 
     <div class="thank-you" id="thankYou">
       Gracias. Cada opinión cuenta más de lo que creés.
@@ -789,7 +797,6 @@ footer {
   </div>
 </section>
 
-<!-- FOOTER -->
 <footer>
   <div class="footer-left">Captrue — Proyecto en desarrollo · Buenos Aires, Argentina · 2026</div>
   <div class="footer-right">¿Querés estar al tanto? <a href="mailto:capoclubcreativo&#64;gmail.com">capoclubcreativo&#64;gmail.com</a></div>
@@ -813,8 +820,12 @@ function selectOption(el, role) {
   document.querySelectorAll('.q-option').forEach(o => o.classList.remove('active'));
   el.classList.add('active');
   selectedRole = role;
+  
+  document.getElementById('hiddenRole').value = role;
+  
   const form = document.getElementById('feedbackForm');
   form.classList.add('visible');
+  
   const placeholders = {
     periodista: '¿Lo usarías en tu trabajo diario? ¿Qué te haría confiar en este sistema?',
     medio: '¿Tu redacción necesita algo así? ¿Qué sería indispensable para vos?',
@@ -824,20 +835,29 @@ function selectOption(el, role) {
   document.getElementById('feedbackText').placeholder = placeholders[role];
 }
 
-function submitFeedback() {
-  const text = document.getElementById('feedbackText').value.trim();
-  if (!text) return;
+// Envío silencioso vía Fetch
+const form = document.getElementById('feedbackForm');
+form.addEventListener('submit', async function(event) {
+  event.preventDefault();
+  
+  const thankYou = document.getElementById('thankYou');
+  const formData = new FormData(form);
+  
+  const response = await fetch(form.action, {
+    method: form.method,
+    body: formData,
+    headers: { 'Accept': 'application/json' }
+  });
 
-  const subject = encodeURIComponent('Feedback Captrue — ' + (selectedRole || 'general'));
-  const body = encodeURIComponent(text);
-  const mailto = 'mailto:capoclubcreativo@gmail.com?subject=' + subject + '&body=' + body;
-  window.location.href = mailto;
-
-  document.getElementById('feedbackForm').style.display = 'none';
-  document.querySelectorAll('.q-option').forEach(o => o.style.display = 'none');
-  document.querySelector('.question-section p').style.display = 'none';
-  document.getElementById('thankYou').style.display = 'block';
-}
+  if (response.ok) {
+    form.style.display = 'none';
+    document.querySelectorAll('.q-option').forEach(o => o.style.display = 'none');
+    document.querySelector('.question-section p').style.display = 'none';
+    thankYou.style.display = 'block';
+  } else {
+    alert("Huy, hubo un error. Probá de nuevo.");
+  }
+});
 </script>
 </body>
 </html>
